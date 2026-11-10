@@ -245,7 +245,7 @@ section{position:relative;padding:clamp(130px,15vw,240px) var(--g) 0}
   <div class="hero-foot">
     <div class="intro">
       <p>AI-generated shots, tracked live in your browser. My name is pinned into each plate the way I would pin CG into a shot.</p>
-      <p class="how" id="how">Pick a shot, then click the plate to drop a tracker or a CG cube; it sticks to the surface under it. Drag a cube to move it, drag its corner or scroll to scale, double-click to delete. Characters carry a frame-by-frame body or face track, and jets cross the sky on the same camera solve.</p>
+      <p class="how" id="how">Pick a shot, then click the plate to drop a tracker or a CG cube; it sticks to the surface under it. Drag a cube to move it, drag its corner or scroll to scale, double-click to delete. The jump carries a frame-by-frame body track, the warrior a face track, and the night street a wireframe on each car.</p>
     </div>
     <div class="tracker-ui">
       <div class="shotsel-wrap"><span class="shotname"><b id="shotT">Rooftop jump</b> <span id="shotS"></span></span><div class="shotsel" id="shotRow" role="tablist" aria-label="Choose a shot"></div></div>
@@ -256,7 +256,6 @@ section{position:relative;padding:clamp(130px,15vw,240px) var(--g) 0}
       </div>
       <div class="tbtns">
         <button class="tbtn tg" id="tBody" type="button" aria-pressed="true" data-cursor>Body track</button>
-        <button class="tbtn tg" id="tJet" type="button" aria-pressed="true" data-cursor>Jet</button>
         <button class="tbtn tg" id="tShow" type="button" aria-pressed="true" data-cursor>Tracks</button>
         <button class="tbtn" id="tClear" type="button" data-cursor>Clear</button>
       </div>
@@ -346,7 +345,7 @@ addEventListener("pointermove",e=>{mouse.x=e.clientX;mouse.y=e.clientY;mouse.nx=
   const PW=640;let PH=480;
   const pc=document.createElement("canvas"),pctx=pc.getContext("2d",{willReadFrequently:true});
   const HP=5,N=HP*2+1,NN=N*N,S=9,MARG=HP+S+2;
-  let FT=700,G=null,Gp=null,RGB=null,ok=true,trk=[],uid=0,show=true,lastT=-1,fIdx=0,tool="tracker",pairs=[],curC=-1,stepN=0,bodyOn=true,jetOn=true;
+  let FT=700,G=null,Gp=null,RGB=null,ok=true,trk=[],uid=0,show=true,lastT=-1,fIdx=0,tool="tracker",pairs=[],curC=-1,stepN=0,bodyOn=true;
   const pins=[];          // {type:'name'|'ball'|'cube', x,y,s, sup, rms}
   let W,H,DPR,sc=1,ox=0,oy=0,mx=-1,my=-1;
   function size(){DPR=Math.min(devicePixelRatio||1,2);W=hero.clientWidth;H=hero.clientHeight;cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);
@@ -451,7 +450,7 @@ addEventListener("pointermove",e=>{mouse.x=e.clientX;mouse.y=e.clientY;mouse.nx=
     // so a pin replays the position it already solved for that exact image
     const c=fIdx<=FWD?fIdx:NF-fIdx;
     curC=c;stepN++;
-    {const cam=pairs.filter(e=>!e.t.obj);let cdx=0,cdy=0;if(cam.length>4){cdx=cam.map(e=>e.dx).sort((a,b)=>a-b)[cam.length>>1];cdy=cam.map(e=>e.dy).sort((a,b)=>a-b)[cam.length>>1]}jetStep(cdx,cdy)}
+    {const cam=pairs.filter(e=>!e.t.obj);let cdx=0,cdy=0;if(cam.length>4){cdx=cam.map(e=>e.dx).sort((a,b)=>a-b)[cam.length>>1];cdy=cam.map(e=>e.dy).sort((a,b)=>a-b)[cam.length>>1]}}
     for(const p of pins){if(p.drag)continue;p.rec=p.rec||new Map();const r=p.rec.get(c);
       if(r){[p.x,p.y,p.sup,p.rms,p.mode]=r;p.replay=true;continue}
       if(p.replay){p.replay=false;p.off=new Map();p.v=null}
@@ -473,23 +472,26 @@ addEventListener("pointermove",e=>{mouse.x=e.clientX;mouse.y=e.clientY;mouse.nx=
     running=false;
   }
   // ---------- body track (33-point pose solved per frame, plate pixels) ----------
-  let POSE={},FACE=null,FEDGES=[],MCOLS=11,MW=160,MH=120,CL=null;
+  let POSE={},FACE=null,CARS=null,FEDGES=[],MCOLS=11,MW=160,MH=120,CL=null;
   const BODY=[[3,5,4.2],[5,7,3.4],[4,6,4.2],[6,8,3.4],[9,11,6.2],[11,13,4.6],[10,12,6.2],[12,14,4.6],[13,17,2.6],[14,18,2.6]];
   function capsuleUnused(a,b,r,col){const dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy)||1,nx=-dy/L*r,ny=dx/L*r,an=Math.atan2(dy,dx);
     ctx.beginPath();ctx.moveTo(a[0]+nx,a[1]+ny);ctx.lineTo(b[0]+nx,b[1]+ny);ctx.arc(b[0],b[1],r,an+Math.PI/2,an-Math.PI/2,true);ctx.lineTo(a[0]-nx,a[1]-ny);ctx.arc(a[0],a[1],r,an-Math.PI/2,an+Math.PI/2,true);ctx.closePath();
     ctx.fillStyle=col.replace("1)",".12)");ctx.fill();ctx.strokeStyle=col;ctx.lineWidth=1.2;ctx.stroke();
     ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.strokeStyle=col.replace("1)",".55)");ctx.lineWidth=1;ctx.stroke()}
-  let cbF=-2,cbV=null;
-  function charBox(){if(cbF===curC)return cbV;cbF=curC;cbV=null;let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
-    const add=(x,y)=>{const q=toS(x,y);x0=Math.min(x0,q[0]);y0=Math.min(y0,q[1]);x1=Math.max(x1,q[0]);y1=Math.max(y1,q[1])};
-    for(const d of POSE[curC]||[])for(let k=0;k<d.length;k+=3)if(d[k+2]>=.5)add(d[k],d[k+1]);
-    const f=FACE&&FACE[curC];if(f)for(let k=0;k<f.length;k+=2)add(f[k],f[k+1]);
-    if(x1>x0)cbV=[x0-40,y0-70,x1+40,y1+20];return cbV}
+  let cbF=-2,cbV=[];
+  // screen boxes of everything the name card should keep clear of: the body or face track, and each car
+  function charBox(){if(cbF===curC)return cbV;cbF=curC;cbV=[];
+    const box=pts=>{let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const [x,y] of pts){const q=toS(x,y);x0=Math.min(x0,q[0]);y0=Math.min(y0,q[1]);x1=Math.max(x1,q[0]);y1=Math.max(y1,q[1])}if(x1>x0)cbV.push([x0-30,y0-50,x1+30,y1+16])};
+    const pr=(a,st,vk)=>{const o=[];for(let k=0;k<a.length;k+=st)if(vk<0||a[k+vk]>=.5)o.push([a[k],a[k+1]]);return o};
+    for(const d of POSE[curC]||[])box(pr(d,3,2));
+    const f=FACE&&FACE[curC];if(f)box(pr(f,2,-1));
+    for(const c of (CARS&&CARS[curC])||[])box([[c.b[0],c.b[1]],[c.b[2],c.b[3]]]);
+    return cbV}
   function drawBody(){
     const L="#5AC8FA",R="#F4D23C",N="rgba(236,234,228,.9)";
     ctx.lineWidth=1.6;ctx.lineCap="round";
     const seg=(a,b,c)=>{if(a[2]<.5||b[2]<.5)return;ctx.strokeStyle=c;ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke()};
-    const ppl=POSE[curC];
+    const ppl=CL&&CL.ch==="body"&&POSE[curC];
     if(ppl)for(const d of ppl){const P=[];for(let k=0;k<d.length;k+=3){const q=toS(d[k],d[k+1]);P.push([q[0],q[1],d[k+2]])}
       const mid=(a,b)=>[(a[0]+b[0])/2,(a[1]+b[1])/2,Math.min(a[2],b[2])];
       const ms=mid(P[3],P[4]),mh=mid(P[9],P[10]);
@@ -501,6 +503,14 @@ addEventListener("pointermove",e=>{mouse.x=e.clientX;mouse.y=e.clientY;mouse.nx=
       for(const k of [3,4,5,6,7,8,9,10,11,12,13,14])if(P[k][2]>=.5){ctx.beginPath();ctx.arc(P[k][0],P[k][1],2.4,0,7);ctx.fillStyle=k%2?L:R;ctx.fill()}
       const lab=hc||ms;if(lab[2]>=.5){if(hc){ctx.fillStyle=N;ctx.beginPath();ctx.arc(hc[0],hc[1],3.2,0,7);ctx.fill()}
         ctx.font="600 11px Archivo, sans-serif";ctx.fillStyle="rgba(236,234,228,.85)";ctx.fillText("Body track  33 pt",lab[0]+10,lab[1]-10)}}
+    const cs=CARS&&CARS[curC];
+    if(cs)for(const c of cs){const col=c.n%2?"rgba(90,200,250,.95)":"rgba(244,210,60,.95)";
+      ctx.strokeStyle=col;ctx.lineWidth=1.4;ctx.beginPath();
+      for(let k=0;k<c.p.length;k+=2){const q=toS(c.p[k],c.p[k+1]);k?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1])}ctx.closePath();ctx.stroke();
+      ctx.lineWidth=.9;ctx.globalAlpha=.7;ctx.beginPath();
+      for(let k=0;k<c.s.length;k+=4){const a=toS(c.s[k],c.s[k+1]),b=toS(c.s[k+2],c.s[k+3]);ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1])}ctx.stroke();ctx.globalAlpha=1;
+      ctx.fillStyle=col;for(let k=0;k<c.p.length;k+=12){const q=toS(c.p[k],c.p[k+1]);ctx.fillRect(q[0]-1.5,q[1]-1.5,3,3)}
+      const t=toS(c.b[0],c.b[1]);ctx.font="600 11px Archivo, sans-serif";ctx.fillStyle="rgba(236,234,228,.85)";ctx.fillText(`Car 0${c.n}  wireframe`,Math.max(8,t[0]),Math.max(84,t[1]-8))}
     const f=FACE&&FACE[curC];
     if(f){const P=[];for(let k=0;k<f.length;k+=2)P.push(toS(f[k],f[k+1]));
       ctx.lineWidth=1.2;ctx.strokeStyle="rgba(90,200,250,.95)";ctx.beginPath();
@@ -508,34 +518,7 @@ addEventListener("pointermove",e=>{mouse.x=e.clientX;mouse.y=e.clientY;mouse.nx=
       let mx=-1e9,my=1e9;for(const q of P){if(q[0]>mx)mx=q[0];if(q[1]<my)my=q[1]}
       ctx.font="600 11px Archivo, sans-serif";ctx.fillStyle="rgba(236,234,228,.85)";ctx.fillText("Face track  478 pt mesh",mx+10,my+12)}
   }
-  // ---------- jet pass: rides the camera move, held out behind the jumper ----------
-  const sl=document.createElement("canvas"),slx=sl.getContext("2d");
-  const jc=document.createElement("canvas"),jx=jc.getContext("2d"),JS=2;let jets=[],trails=[],matte=null,mattec=document.createElement("canvas"),mx2=mattec.getContext("2d");
-  function jetStep(cdx,cdy){
-    jc.width=PW*JS;jc.height=PH*JS;
-    if(CL&&CL.jet&&stepN%120===18){const dir=Math.random()<.5?1:-1,y=CL.jet[0]+Math.random()*(CL.jet[1]-CL.jet[0]),sp=(14+Math.random()*5)*dir,s=1.15+Math.random()*.4;
-      jets.push({x:dir>0?-60:PW+60,y,vx:sp,vy:(Math.random()-.5)*1.4,s,bank:(Math.random()-.5)*.14});
-      if(Math.random()<.55)jets.push({x:(dir>0?-60:PW+60)-dir*48,y:y+16*s,vx:sp,vy:0,s:s*.9,bank:0,wing:1})}
-    for(const t of trails){t.x+=cdx;t.y+=cdy;t.a-=.012;t.w+=.05}trails=trails.filter(t=>t.a>0);
-    for(const j of jets){j.id=j.id||Math.random();j.x+=j.vx+cdx;j.y+=j.vy+cdy;const d=Math.sign(j.vx);trails.push({id:j.id,x:j.x-d*24*j.s,y:j.y+.5*j.s,a:.45,w:.9*j.s})}
-    jets=jets.filter(j=>j.x>-120&&j.x<PW+120);
-    if(!jetOn||(!jets.length&&!trails.length))return;
-    jx.setTransform(JS,0,0,JS,0,0);
-    // contrails: continuous ribbons that widen and fade as they age
-    const byJet=new Map();for(const t of trails){if(!byJet.has(t.id))byJet.set(t.id,[]);byJet.get(t.id).push(t)}
-    jx.lineCap="round";
-    for(const arr of byJet.values())for(let i=1;i<arr.length;i++){const a=arr[i-1],b=arr[i];
-      jx.strokeStyle=`rgba(248,240,226,${Math.min(a.a,b.a).toFixed(3)})`;jx.lineWidth=(a.w+b.w);jx.beginPath();jx.moveTo(a.x,a.y);jx.lineTo(b.x,b.y);jx.stroke()}
-    for(const j of jets){const d=Math.sign(j.vx);
-      for(let k=3;k>=0;k--){jx.save();jx.translate(j.x-j.vx*k*.12,j.y);jx.scale(d*j.s,j.s);jx.rotate(j.bank);jx.globalAlpha=k?0.18:1;
-        jx.fillStyle="rgba(22,20,19,.95)";jx.beginPath();
-        // generic delta-wing fighter in profile
-        jx.moveTo(24,0);jx.lineTo(15,-1.6);jx.lineTo(9,-3.6);jx.lineTo(3,-4.2);jx.lineTo(-2,-3);jx.lineTo(-13,-2.8);jx.lineTo(-18,-11);jx.lineTo(-22,-11);jx.lineTo(-21,-2.6);
-        jx.lineTo(-24,-1.8);jx.lineTo(-24,1.8);jx.lineTo(-15,2.6);jx.lineTo(-19,7.5);jx.lineTo(-14,7.5);jx.lineTo(-4,2.6);jx.lineTo(10,1.8);jx.closePath();jx.fill();
-        if(!k){const g=jx.createRadialGradient(-26,0,0,-26,0,5+Math.random()*2);g.addColorStop(0,"rgba(255,236,190,.95)");g.addColorStop(.5,"rgba(255,150,60,.6)");g.addColorStop(1,"rgba(255,120,40,0)");
-          jx.fillStyle=g;jx.beginPath();jx.arc(-26,0,7,0,7);jx.fill()}
-        jx.restore()}}
-  }
+  const sl=document.createElement("canvas"),slx=sl.getContext("2d");let matte=null;
   // ---------- drawing ----------
   function cubeG(p){const [sx,sy]=toS(p.x,p.y),s=18*p.s*(p.us||1)*Math.min(sc,2.4),dx=s*.55,dy=-s*.32;
     return{sx,sy,s,dx,dy,x0:sx-s/2-4,x1:sx+s/2+dx+4,y0:sy-s+dy-4,y1:sy+4,hx:sx+s/2+dx,hy:sy-s+dy}}
@@ -557,15 +540,14 @@ addEventListener("pointermove",e=>{mouse.x=e.clientX;mouse.y=e.clientY;mouse.nx=
   function draw(){requestAnimationFrame(draw);render()}
   function render(){
     ctx.clearRect(0,0,W,H);
-    // scene layer: the jet pass and the pinned name card live in the plate, so the jumper is held out of both
+    // scene layer: the pinned name card and cubes live in the plate, so characters and cars are held out of them
     if(sl.width!==Math.round(W*DPR)){sl.width=W*DPR;sl.height=H*DPR}
     slx.setTransform(DPR,0,0,DPR,0,0);slx.clearRect(0,0,W,H);
-    if(jetOn&&jc.width)slx.drawImage(jc,ox,oy,PW*sc,PH*sc);
     const nm=pins[0],front=CL&&CL.front;
     const card=()=>{if(nm){const [ax,ay]=toS(nm.x,nm.y),cw=Math.max(230,ins.offsetWidth),ch=ins.offsetHeight||86;
-      const bb=charBox(),hit=(x,y)=>bb&&x<bb[2]&&x+cw>bb[0]&&y<bb[3]&&y+ch>bb[1];
+      const bbs=charBox(),cost=(x,y)=>bbs.reduce((a,b)=>a+Math.max(0,Math.min(x+cw,b[2])-Math.max(x,b[0]))*Math.max(0,Math.min(y+ch,b[3])-Math.max(y,b[1])),0);
       const opts=[[ax+30,ay-30-ch],[ax-30-cw,ay-30-ch],[ax+30,ay+30],[ax-30-cw,ay+30]].map(([x,y])=>[clamp(x,16,W-cw-16),clamp(y,70,FT-ch-14)]);
-      let [cx,cy]=opts.find(([x,y])=>!hit(x,y))||opts[0];
+      const cs=opts.map(o=>cost(o[0],o[1]));let bi=cs.indexOf(Math.min(...cs));if(nm.oi!=null&&cs[nm.oi]<=cs[bi]+.2*cw*ch)bi=nm.oi;nm.oi=bi;let [cx,cy]=opts[bi];
       const good=nm.mode==="pinned",txt=nm.drag?"Re-pinning":good?`Pinned on ${nm.sup} tracks, ${nm.rms.toFixed(2)} px RMS`:nm.mode==="predict"?"Occluded, riding the camera move":"Looking for tracks here";
       if(lk.textContent!==txt)lk.textContent=txt;
       slx.strokeStyle="rgba(244,210,60,.85)";slx.lineWidth=1;slx.beginPath();slx.moveTo(ax,ay);slx.lineTo(cx<ax?cx+cw:cx,cy<ay?cy+ch:cy);slx.stroke();
@@ -577,12 +559,13 @@ addEventListener("pointermove",e=>{mouse.x=e.clientX;mouse.y=e.clientY;mouse.nx=
       slx.fillStyle="#ECEAE4";slx.font="700 16px Archivo, sans-serif";slx.fillText("Akash Desai",cx+20,cy+30);
       slx.fillStyle="#D3D1CB";slx.font="400 12.5px Archivo, sans-serif";slx.fillText("Concept artist, Eyeline Studios. Matchmove since 2017.",cx+20,cy+50);
       slx.fillStyle=good?"#5BE08A":"#F4D23C";slx.fillRect(cx+20,cy+64,6,6);slx.font="500 11px Archivo, sans-serif";slx.fillText(txt,cx+32,cy+70);
-      ins.style.transform=`translate(${cx.toFixed(1)}px,${cy.toFixed(1)}px)`;ins.style.width=cw+"px"}
-    for(const p of pins){if(p.type==="cube")drawCube(p,slx)}};
-    if(!front)card();
-    if(matte&&curC>=0&&(POSE[curC]||(FACE&&FACE[curC]))){slx.setTransform(1,0,0,1,0,0);slx.globalCompositeOperation="destination-out";
+      ins.style.transform=`translate(${cx.toFixed(1)}px,${cy.toFixed(1)}px)`;ins.style.width=cw+"px"}};
+    const cubes=()=>{for(const p of pins){if(p.type==="cube")drawCube(p,slx)}};
+    const cf=front||(CL&&CL.cardFront);
+    if(!cf)card();if(!front)cubes();
+    if(matte&&curC>=0&&curC<MCOLS*Math.round(matte.height/MH)){slx.setTransform(1,0,0,1,0,0);slx.globalCompositeOperation="destination-out";
       slx.drawImage(matte,(curC%MCOLS)*MW,((curC/MCOLS)|0)*MH,MW,MH,ox*DPR,oy*DPR,PW*sc*DPR,PH*sc*DPR);slx.globalCompositeOperation="source-over"}
-    if(front){slx.setTransform(DPR,0,0,DPR,0,0);card()}
+    slx.setTransform(DPR,0,0,DPR,0,0);if(cf)card();if(front)cubes();
     ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(sl,0,0);ctx.restore();
     // trackers, body track and cubes sit on top as viewer overlays
     if(show)for(const t of trk){
@@ -634,7 +617,6 @@ addEventListener("pointermove",e=>{mouse.x=e.clientX;mouse.y=e.clientY;mouse.nx=
   $("#tClear").onclick=()=>{trk=trk.filter(t=>!t.user);pins.splice(1)};
   $("#tShow").onclick=e=>{show=!show;e.currentTarget.setAttribute("aria-pressed",show)};
   $("#tBody").onclick=e=>{bodyOn=!bodyOn;e.currentTarget.setAttribute("aria-pressed",bodyOn)};
-  $("#tJet").onclick=e=>{jetOn=!jetOn;e.currentTarget.setAttribute("aria-pressed",jetOn)};
   if(!FINE)$("#how").textContent="Tap the plate to drop a tracker or a CG cube. Drag a cube to move it, drag its corner to scale.";
   function init(){PH=Math.round(PW*v.videoHeight/v.videoWidth)||480;pc.width=PW;pc.height=PH;size();G=grab();if(!G)return;
     // pin the name to the strongest corner in this shot's static set dressing, clipped to what is on screen
@@ -648,13 +630,13 @@ addEventListener("pointermove",e=>{mouse.x=e.clientX;mouse.y=e.clientY;mouse.nx=
   }
   // ---------- shots ----------
   const CLIPS=[
-    {id:"jump",t:"Rooftop jump",s:"Body track",ch:"body",jet:[95,165],pin:[.6,.55,.86,.67],n:174,f:87},
-    {id:"leap",t:"Rooftop leap",s:"Body track",ch:"body",jet:[75,130],pin:[.62,.6,.95,.86],n:158,f:79},
-    {id:"rescue",t:"The Rescue",s:"Body track",ch:"body",jet:[80,130],pin:[.74,.3,.98,.62],n:190,f:95},
-    {id:"rooftop",t:"Sunset walk",s:"Body track",ch:"body",jet:[80,135],pin:[.04,.5,.4,.7],n:190,f:95},
-    {id:"warrior",t:"The Warrior",s:"Face track",ch:"face",front:1,jet:[95,150],pin:[.6,.78,.9,.96],n:192,f:96},
-    {id:"summit",t:"Summit",s:"Camera track only",ch:null,jet:[70,120],pin:[.58,.25,.95,.5],n:190,f:95},
-    {id:"street",t:"Night street",s:"Camera track only",ch:null,jet:null,pin:[.05,.25,.35,.6],n:190,f:95}
+    {id:"jump",t:"Rooftop jump",s:"Body track",ch:"body",m:1,pin:[.6,.55,.86,.67],n:174,f:87},
+    {id:"leap",t:"Rooftop leap",s:"Camera track",ch:null,m:1,pin:[.62,.6,.95,.86],n:158,f:79},
+    {id:"rescue",t:"The Rescue",s:"Camera track",ch:null,m:1,pin:[.74,.3,.98,.62],n:190,f:95},
+    {id:"rooftop",t:"Sunset walk",s:"Camera track",ch:null,m:1,pin:[.04,.5,.4,.7],n:190,f:95},
+    {id:"warrior",t:"The Warrior",s:"Face track",ch:"face",m:1,front:1,pin:[.6,.78,.9,.96],n:192,f:96},
+    {id:"summit",t:"Summit",s:"Camera track",ch:null,pin:[.58,.25,.95,.5],n:190,f:95},
+    {id:"street",t:"Night street",s:"Car wireframe",ch:"car",m:1,cardFront:1,pin:[.42,.48,.56,.63],n:190,f:95}
   ];
   const cache=new Map(),row=$("#shotRow");let cur=-1,inited=false;
   CLIPS.forEach((c,i)=>{const b=document.createElement("button");b.type="button";b.setAttribute("role","tab");b.dataset.cursor=c.t;
@@ -663,7 +645,7 @@ addEventListener("pointermove",e=>{mouse.x=e.clientX;mouse.y=e.clientY;mouse.nx=
     const pr=Promise.all([
       fetch(`media/plates/${c.id}.mp4`).then(r=>r.blob()).then(b=>URL.createObjectURL(b)),
       fetch(`media/plates/${c.id}.json`).then(r=>r.json()).catch(()=>({})),
-      c.ch?new Promise(res=>{const im=new Image();im.onload=()=>res(im);im.onerror=()=>res(null);im.src=`media/plates/${c.id}-matte.png`}):Promise.resolve(null)]);
+      c.m?new Promise(res=>{const im=new Image();im.onload=()=>res(im);im.onerror=()=>res(null);im.src=`media/plates/${c.id}-matte.png`}):Promise.resolve(null)]);
     cache.set(c.id,pr);return pr};
   async function loadClip(i){
     if(i===cur||loading)return;loading=true;$("#heroLoad").classList.add("on");
@@ -671,10 +653,9 @@ addEventListener("pointermove",e=>{mouse.x=e.clientX;mouse.y=e.clientY;mouse.nx=
     $("#shotT").textContent=c.t;$("#shotS").textContent=c.s;
     while(running)await new Promise(r=>setTimeout(r,20));
     const [url,data,mt]=await getClip(c);
-    CL=c;cur=i;NF=c.n;FWD=c.f;POSE=data.pose||{};FACE=data.face||null;FEDGES=data.edges||[];MCOLS=data.cols||11;MW=data.mw||160;MH=data.mh||120;matte=mt;
-    cbF=-2;trk=[];pins.length=0;jets=[];trails=[];fi=0;curC=-1;G=Gp=null;edit=hov=null;stepN=0;
-    const tb=$("#tBody");tb.disabled=!c.ch;tb.textContent=c.ch==="face"?"Face track":"Body track";
-    const tj=$("#tJet");tj.disabled=!c.jet;
+    CL=c;cur=i;NF=c.n;FWD=c.f;POSE=data.pose||{};FACE=data.face||null;CARS=data.cars||null;FEDGES=data.edges||[];MCOLS=data.cols||11;MW=data.mw||160;MH=data.mh||120;matte=mt;
+    cbF=-2;cbV=[];trk=[];pins.length=0;fi=0;curC=-1;G=Gp=null;edit=hov=null;stepN=0;
+    const tb=$("#tBody");tb.disabled=!c.ch;tb.textContent=c.ch==="face"?"Face track":c.ch==="car"?"Car wireframe":"Body track";
     await new Promise(res=>{const on=()=>{v.removeEventListener("loadeddata",on);res()};v.addEventListener("loadeddata",on);v.src=url;});
     await seekTo(0);init();inited=true;loading=false;$("#heroLoad").classList.remove("on");
     // warm the next shot in the background
