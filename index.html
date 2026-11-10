@@ -60,8 +60,7 @@ html.cur-on #cur{display:block}
 .ls-btn::after{content:"";position:absolute;left:16px;right:0;bottom:-3px;height:1px;background:linear-gradient(90deg,#9d8cff,#5AC8FA);transform:scaleX(.35);transform-origin:left;transition:transform .35s}
 .ls-btn:hover{color:#fff;text-shadow:0 0 12px rgba(157,140,255,.9)}.ls-btn:hover::after{transform:scaleX(1)}
 @keyframes lsSpin{to{transform:rotate(360deg)}}
-.who .tc{opacity:1}.who #wmTc{opacity:.75}
-.who #wmTc{color:var(--marker);font-feature-settings:"tnum" 1}
+.who .tc{opacity:1}
 .who:hover .mono i{width:14px;height:14px;margin:-4px}
 .who:hover .mono i{border-color:var(--lock)}
 .who:hover .nm span:last-child{transform:translateX(4px)}
@@ -229,7 +228,7 @@ section{position:relative;padding:clamp(130px,15vw,240px) var(--g) 0}
   .reel .go .pill{display:none}
   .reel .go b{font-size:20px}
   .xp-axis span:nth-child(even){display:none}
-  .hud-top .who .nm,.hud-top #wmTc{display:none}.who .wm{justify-content:center}.who .tc{margin-top:0}
+  .hud-top .who .nm{display:none}.who .wm{justify-content:center}.who .tc{margin-top:0}
   .ls-btn{font-size:0;gap:0;width:30px;height:30px;justify-content:center}.ls-btn i{width:15px;height:15px;filter:drop-shadow(0 0 6px #9d8cff)}.ls-btn::after{display:none}
   .hud-top .who{gap:8px}.hud-top nav a{white-space:nowrap}
   .who .mono{width:38px;height:38px}
@@ -279,7 +278,7 @@ section{position:relative;padding:clamp(130px,15vw,240px) var(--g) 0}
   <div class="who">
     <a class="mono" href="#hero" data-cursor="none" aria-label="Akash Desai, back to top"><i></i><i></i><i></i><i></i><b>AD</b><em></em></a>
     <div class="wm"><a class="nm" href="#hero" data-cursor="none" tabindex="-1" aria-hidden="true"><span>Akash</span> <span>Desai</span></a>
-      <span class="tc"><button class="ls-btn" id="lsBtn" type="button" data-cursor="Enter latent space"><i aria-hidden="true"></i>Latent space</button> <span id="wmTc" aria-hidden="true">00:00:00:00</span></span></div>
+      <span class="tc"><button class="ls-btn" id="lsBtn" type="button" data-cursor="Enter latent space"><i aria-hidden="true"></i>Latent space</button></span></div>
   </div>
   <nav aria-label="Sections">
     <a href="#tracking" data-cursor>Tracking</a><a href="#films" data-cursor>AI films</a><a href="#stills" data-cursor>Stills</a><a href="#experience" data-cursor>Experience</a><a href="#contact" data-cursor>Contact</a>
@@ -599,9 +598,6 @@ addEventListener("pointermove",e=>{mouse.x=e.clientX;mouse.y=e.clientY;mouse.nx=
   }
   function cross(sx,sy,c,r){ctx.strokeStyle=c;ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(sx-r,sy);ctx.lineTo(sx-2,sy);ctx.moveTo(sx+2,sy);ctx.lineTo(sx+r,sy);ctx.moveTo(sx,sy-r);ctx.lineTo(sx,sy-2);ctx.moveTo(sx,sy+2);ctx.lineTo(sx,sy+r);ctx.stroke()}
   const lk=$("#insLock");
-  {const tcEl=$("#wmTc"),t0=performance.now(),p2=n=>String(n).padStart(2,"0");let last=-1;
-    (function tc(){requestAnimationFrame(tc);const f=Math.floor((performance.now()-t0)/1000*24);if(f===last)return;last=f;
-      tcEl.textContent=`${p2(Math.floor(f/86400)%24)}:${p2(Math.floor(f/1440)%60)}:${p2(Math.floor(f/24)%60)}:${p2(f%24)}`})()}
   function draw(){requestAnimationFrame(draw);render()}
   function render(){
     ctx.clearRect(0,0,W,H);
