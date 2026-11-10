@@ -38,9 +38,29 @@ html.cur-on #cur{display:block}
 #cur.labeled .lab{opacity:1}
 
 /* ---------- top HUD ---------- */
-.hud-top{position:fixed;z-index:50;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:center;padding:22px var(--g);font-size:13px;pointer-events:none;mix-blend-mode:difference}
+.hud-top{position:fixed;z-index:50;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:center;padding:22px var(--g);font-size:13px;pointer-events:none;text-shadow:0 1px 10px rgba(0,0,0,.55)}
 .hud-top>*{pointer-events:auto}
-.hud-top .who{font-weight:700}
+.hud-top .who{display:flex;align-items:center;gap:14px;text-decoration:none}
+.who .mono{position:relative;width:44px;height:44px;display:grid;place-items:center;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.who .mono i{position:absolute;width:10px;height:10px;border:1.5px solid var(--marker);filter:drop-shadow(0 0 4px rgba(0,0,0,.5));transition:all .35s cubic-bezier(.2,.8,.2,1)}
+.who .mono i:nth-child(1){left:0;top:0;border-right:0;border-bottom:0}
+.who .mono i:nth-child(2){right:0;top:0;border-left:0;border-bottom:0}
+.who .mono i:nth-child(3){left:0;bottom:0;border-right:0;border-top:0}
+.who .mono i:nth-child(4){right:0;bottom:0;border-left:0;border-top:0}
+.who .mono b{font-size:15px;font-weight:800;letter-spacing:-.02em;font-variation-settings:"wdth" 75}
+.who .mono em{position:absolute;right:-3px;top:-3px;width:5px;height:5px;border-radius:50%;background:var(--lock);animation:wmBlink 1.6s steps(2,start) infinite}
+@keyframes wmBlink{to{opacity:.15}}
+.who .wm{display:flex;flex-direction:column;line-height:1.05}
+.who .nm{font-size:21px;font-weight:750;letter-spacing:-.025em;font-variation-settings:"wdth" 82}
+.who .nm span{display:inline-block;transition:transform .4s cubic-bezier(.2,.8,.2,1),letter-spacing .4s}
+.who .tc{margin-top:5px;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;opacity:.7;display:flex;gap:10px}
+.who .tc s{text-decoration:none}
+.who #wmTc{color:var(--marker);font-feature-settings:"tnum" 1}
+.who:hover .mono i{width:14px;height:14px;margin:-4px}
+.who:hover .mono i{border-color:var(--lock)}
+.who:hover .nm span:last-child{transform:translateX(4px)}
+.who:hover .nm{letter-spacing:-.01em}
+@media (prefers-reduced-motion:reduce){.who .mono em{animation:none}}
 .hud-top nav{display:flex;gap:30px}
 .hud-top nav a{text-decoration:none;opacity:.75}
 .hud-top nav a:hover,.hud-top nav a.on{opacity:1}
@@ -203,8 +223,8 @@ section{position:relative;padding:clamp(130px,15vw,240px) var(--g) 0}
   .reel .go .pill{display:none}
   .reel .go b{font-size:20px}
   .xp-axis span:nth-child(even){display:none}
-  .hud-top .who{display:none}
-  .hud-top{justify-content:flex-end}
+  .hud-top .who .wm{display:none}
+  .who .mono{width:38px;height:38px}
   .hud-top nav{gap:12px;font-size:12px}
   .sec-head{flex-direction:column;align-items:flex-start}
   .sec-head p{text-align:left}
@@ -225,7 +245,10 @@ section{position:relative;padding:clamp(130px,15vw,240px) var(--g) 0}
 <div id="cur" aria-hidden="true"><div class="box"><i class="c a"></i><i class="c b"></i><i class="c d"></i><i class="c e"></i><i class="dot"></i></div><span class="lab"></span></div>
 
 <header class="hud-top">
-  <a class="who" href="#hero" data-cursor>Akash Desai</a>
+  <a class="who" href="#hero" data-cursor="none" aria-label="Akash Desai, back to top">
+    <span class="mono" aria-hidden="true"><i></i><i></i><i></i><i></i><b>AD</b><em></em></span>
+    <span class="wm"><span class="nm" aria-hidden="true"><span>Akash</span> <span>Desai</span></span><span class="tc" aria-hidden="true"><s>Matchmove &amp; AI imagery</s> <span id="wmTc">00:00:00:00</span></span></span>
+  </a>
   <nav aria-label="Sections">
     <a href="#tracking" data-cursor>Tracking</a><a href="#films" data-cursor>AI films</a><a href="#stills" data-cursor>Stills</a><a href="#experience" data-cursor>Experience</a><a href="#contact" data-cursor>Contact</a>
   </nav>
@@ -537,6 +560,9 @@ addEventListener("pointermove",e=>{mouse.x=e.clientX;mouse.y=e.clientY;mouse.nx=
   }
   function cross(sx,sy,c,r){ctx.strokeStyle=c;ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(sx-r,sy);ctx.lineTo(sx-2,sy);ctx.moveTo(sx+2,sy);ctx.lineTo(sx+r,sy);ctx.moveTo(sx,sy-r);ctx.lineTo(sx,sy-2);ctx.moveTo(sx,sy+2);ctx.lineTo(sx,sy+r);ctx.stroke()}
   const lk=$("#insLock");
+  {const tcEl=$("#wmTc"),t0=performance.now(),p2=n=>String(n).padStart(2,"0");let last=-1;
+    (function tc(){requestAnimationFrame(tc);const f=Math.floor((performance.now()-t0)/1000*24);if(f===last)return;last=f;
+      tcEl.textContent=`${p2(Math.floor(f/86400)%24)}:${p2(Math.floor(f/1440)%60)}:${p2(Math.floor(f/24)%60)}:${p2(f%24)}`})()}
   function draw(){requestAnimationFrame(draw);render()}
   function render(){
     ctx.clearRect(0,0,W,H);
