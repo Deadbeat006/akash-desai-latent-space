@@ -124,6 +124,11 @@ section{position:relative;padding:clamp(130px,15vw,240px) var(--g) 0}
 .reel .go .pill{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;background:var(--marker);color:var(--bg);font-weight:700;font-size:14px;white-space:nowrap}
 .reel .pill svg{width:12px;height:12px;fill:var(--bg)}
 .reel.on .go{display:none}
+.reel.on video{object-fit:contain}
+.reel-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.reel-tabs button{font:600 13px Archivo,sans-serif;color:var(--dim);background:none;border:1.5px solid var(--line);padding:9px 14px;transition:color .2s,border-color .2s}
+.reel-tabs button:hover{color:var(--paper)}
+.reel-tabs button[aria-selected="true"]{color:var(--paper);border-color:var(--marker)}
 .shots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(48px,5vw,80px) clamp(28px,3.4vw,56px)}
 .shot-card .well{position:relative;background:#000;aspect-ratio:2.2/1;overflow:hidden}
 .shot-card video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .18s linear}
@@ -319,9 +324,10 @@ section{position:relative;padding:clamp(130px,15vw,240px) var(--g) 0}
 
 <section id="tracking" aria-labelledby="h-trk">
   <div class="sec-head"><h2 id="h-trk">Camera tracking</h2><p>Feature film camera and body tracking for Hellboy, The Walking Dead, Lost in Space, Here and Now and more.</p></div>
+  <div class="reel-tabs" id="reelTabs" role="tablist" aria-label="Choose a reel"></div>
   <div class="reel" id="reel" data-cursor="Play reel">
-    <img src="media/poster/matchmove-reel.jpg" alt="">
-    <button class="go" type="button" id="reelGo"><div><b>Camera and matchmove reel</b><span>Camera tracks, body tracks and rotomation, 1 min 45 s</span></div><span class="pill"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z"/></svg>Play with sound</span></button>
+    <img src="media/poster/showreel-latest.jpg" alt="">
+    <button class="go" type="button" id="reelGo"><div><b>Latest showreel</b><span>Camera, body, head and face tracks, 1 min 26 s</span></div><span class="pill"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z"/></svg>Play with sound</span></button>
   </div>
   <div class="shots" id="shots"></div>
 </section>
@@ -738,9 +744,19 @@ const SHOTS=[
   {id:"sm01",title:"Forest lunge",film:"Slender Man",work:"Camera solve, ground plane, body track"},
   {id:"hb04",title:"Creature bite",film:"Hellboy",work:"Camera solve, head and neck track"}
 ];
+const REELS=[
+  {tab:"Latest showreel",title:"Latest showreel",sub:"Camera, body, head and face tracks, 1 min 26 s",src:"media/reel/showreel-latest.mp4",poster:"media/poster/showreel-latest.jpg"},
+  {tab:"Matchmove reel",title:"Camera and matchmove reel",sub:"Camera tracks, body tracks and rotomation, 1 min 45 s",src:"media/reel/matchmove-reel.mp4",poster:"media/poster/matchmove-reel.jpg"}
+];
 (function(){
-  $("#reelGo").onclick=()=>{const r=$("#reel");r.classList.add("on");
-    const v=document.createElement("video");v.src="media/reel/matchmove-reel.mp4";v.controls=true;v.playsInline=true;v.poster="media/poster/matchmove-reel.jpg";
+  let rI=0;const r=$("#reel"),tabs=$("#reelTabs");
+  const showReel=i=>{rI=i;const R=REELS[i];r.classList.remove("on");r.querySelectorAll("video").forEach(v=>v.remove());
+    r.querySelector("img").src=R.poster;r.querySelector("#reelGo b").textContent=R.title;r.querySelector("#reelGo div span").textContent=R.sub;r.dataset.cursor="Play reel";
+    [...tabs.children].forEach((b,j)=>b.setAttribute("aria-selected",j===i))};
+  REELS.forEach((R,i)=>{const b=document.createElement("button");b.type="button";b.setAttribute("role","tab");b.dataset.cursor="";b.textContent=R.tab;b.onclick=()=>showReel(i);tabs.appendChild(b)});
+  showReel(0);
+  $("#reelGo").onclick=()=>{const R=REELS[rI];r.classList.add("on");
+    const v=document.createElement("video");v.src=R.src;v.controls=true;v.playsInline=true;v.poster=R.poster;
     r.appendChild(v);v.play().catch(()=>{v.muted=true;v.play().catch(()=>{})});r.dataset.cursor=""};
   const io=new IntersectionObserver(es=>{for(const e of es){e.target.querySelectorAll("video").forEach(v=>{if(e.isIntersecting&&!RM)v.play().catch(()=>{});else v.pause()})}},{threshold:.25});
   for(const s of SHOTS){
@@ -979,8 +995,8 @@ function openTrack(i){ovMode="track";ovI=(i+SHOTS.length)%SHOTS.length;const t=S
   ovS.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;width:100%;max-height:100%">${["track","final"].map(k=>
     `<figure style="margin:0;display:flex;flex-direction:column;gap:6px;min-height:0"><video src="media/track/${t.id}-${k}.mp4" muted loop playsinline autoplay style="width:100%;max-height:70vh;object-fit:contain;background:#000"></video><figcaption style="font-size:12px;color:var(--dim)">${k==="track"?"Track":"Final"}</figcaption></figure>`).join("")}</div>`;
   $("#ovT").textContent=t.title;$("#ovU").textContent=`${t.film}. ${t.work}`;if(!ov.classList.contains("open"))ovShow()}
-function openReel(){ovMode="reel";ovS.innerHTML="";const v=document.createElement("video");v.src="media/reel/matchmove-reel.mp4";v.poster="media/poster/matchmove-reel.jpg";v.controls=true;v.playsInline=true;ovS.appendChild(v);
-  v.play().catch(()=>{v.muted=true;v.play().catch(()=>{})});$("#ovT").textContent="Matchmove reel";$("#ovU").textContent="Camera and body tracking, 2017 to 2025";if(!ov.classList.contains("open"))ovShow()}
+function openReel(i){i=i||0;const R=REELS[i];ovMode="reel";ovS.innerHTML="";const v=document.createElement("video");v.src=R.src;v.poster=R.poster;v.controls=true;v.playsInline=true;ovS.appendChild(v);
+  v.play().catch(()=>{v.muted=true;v.play().catch(()=>{})});$("#ovT").textContent=R.title;$("#ovU").textContent=R.sub;if(!ov.classList.contains("open"))ovShow()}
 function openFilmId(id){let i=FVIEW.findIndex(f=>f.id===id);if(i<0){const all=$$("#fchips .chip").find(b=>b.textContent.trim().startsWith("All"));all&&all.click();i=FVIEW.findIndex(f=>f.id===id)}openFilm(Math.max(0,i))}
 
 (function(){
@@ -1011,7 +1027,7 @@ function openFilmId(id){let i=FVIEW.findIndex(f=>f.id===id);if(i<0){const all=$$
     const sec=(key,label,list,gap)=>{SECS.push({key,label,z0:z});
       objs.push({kind:"title",z,x:0,y:0,label,n:String(SECS.length).padStart(2,"0"),count:list.length});
       z+=900;list.forEach((o,i)=>{const [x,y]=heli(i,SECS.length*1.3);Object.assign(o,{z,x,y,ph:sr()*7,rot:(sr()-.5)*.06});objs.push(o);z+=gap});z+=700};
-    sec("tracking","Camera tracking",[{kind:"img",src:"media/poster/matchmove-reel.jpg",w:560,ar:9/16,t:"Matchmove reel",u:"Showreel, 2017 to 2025",act:()=>openReel()},
+    sec("tracking","Camera tracking",[...REELS.map((R,i)=>({kind:"img",src:R.poster,w:i?480:600,ar:9/16,t:R.title,u:R.sub,act:()=>openReel(i)})),
       ...SHOTS.map((s,i)=>({kind:"img",src:`media/poster/${s.id}.jpg`,w:400,ar:9/16,t:s.title,u:`${s.film}. ${s.work}`,act:()=>openTrack(i)}))],560);
     sec("films","AI films",FILMS.map(f=>({kind:"img",src:`media/poster/${f.id}.jpg`,w:f.h>f.w?260:420,ar:f.h/f.w,t:f.title,u:f.sub,act:()=>openFilmId(f.id)})),520);
     sec("stills","Stills",FLAT.map((s,i)=>({kind:"img",src:`media/stills/${s.id}-sm.webp`,w:s.h>=s.w?330:420,ar:s.h/s.w,t:s.title,u:s.s,act:()=>openStill(i)})),440);
