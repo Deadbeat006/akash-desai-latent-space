@@ -352,13 +352,13 @@ section{position:relative;padding:clamp(130px,15vw,240px) var(--g) 0}
 
 <section id="contact" aria-labelledby="h-contact">
   <div class="sec-head"><h2 id="h-contact" class="xw">Contact</h2><p>Open to concept art, AI film and matchmove work.</p></div>
-  <a class="mail" href="mailto:akashdesai091@gmail.com" data-cursor>akashdesai091@gmail.com</a>
+  <a class="mail" href="mailto:akashdesai091@gmail.com" data-goatcounter-click="click-email" data-cursor>akashdesai091@gmail.com</a>
   <div class="crow">
     <button class="btn" id="copyMail" type="button" data-cursor>Copy email</button>
-    <a class="btn" href="https://drive.google.com/file/d/14-2s-vMMeT_dZPbzDuzO_0RlC1uS38Ux/view?usp=sharing" target="_blank" rel="noopener" data-cursor>Resume</a>
-    <a class="btn" href="https://www.imdb.com/name/nm10135833/" target="_blank" rel="noopener" data-cursor>IMDb</a>
-    <a class="btn" href="https://www.linkedin.com/in/akash-091/" target="_blank" rel="noopener" data-cursor>LinkedIn</a>
-    <a class="btn" href="https://instagram.com/notakash.gpt" target="_blank" rel="noopener" data-cursor>Instagram</a>
+    <a class="btn" href="https://drive.google.com/file/d/14-2s-vMMeT_dZPbzDuzO_0RlC1uS38Ux/view?usp=sharing" data-goatcounter-click="click-resume" target="_blank" rel="noopener" data-cursor>Resume</a>
+    <a class="btn" href="https://www.imdb.com/name/nm10135833/" data-goatcounter-click="click-imdb" target="_blank" rel="noopener" data-cursor>IMDb</a>
+    <a class="btn" href="https://www.linkedin.com/in/akash-091/" data-goatcounter-click="click-linkedin" target="_blank" rel="noopener" data-cursor>LinkedIn</a>
+    <a class="btn" href="https://instagram.com/notakash.gpt" data-goatcounter-click="click-instagram" target="_blank" rel="noopener" data-cursor>Instagram</a>
   </div>
   <div class="stack">
     <div><b>Tracking</b>3DEqualizer, PFTrack, Boujou, Mocha, MM Solver</div>
@@ -744,7 +744,7 @@ const REELS=[
 (function(){
   REELS.forEach(R=>{const r=document.createElement("div");r.className="reel";r.dataset.cursor="Play reel";
     r.innerHTML=`<img src="${R.poster}" alt=""><button class="go" type="button"><div><b>${R.title}</b><span>${R.sub}</span></div><span class="pill"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z"/></svg>Play with sound</span></button>`;
-    r.querySelector(".go").onclick=()=>{r.classList.add("on");const v=document.createElement("video");v.src=R.src;v.controls=true;v.playsInline=true;v.poster=R.poster;
+    r.querySelector(".go").onclick=()=>{track("play-"+R.src.split("/").pop().replace(".mp4",""),"Played "+R.title);r.classList.add("on");const v=document.createElement("video");v.src=R.src;v.controls=true;v.playsInline=true;v.poster=R.poster;
       r.appendChild(v);v.play().catch(()=>{v.muted=true;v.play().catch(()=>{})});r.dataset.cursor=""};
     $("#reels").appendChild(r)});
   const io=new IntersectionObserver(es=>{for(const e of es){e.target.querySelectorAll("video").forEach(v=>{if(e.isIntersecting&&!RM)v.play().catch(()=>{});else v.pause()})}},{threshold:.25});
@@ -922,7 +922,7 @@ const FLAT=[];STILLS.forEach(g=>g.items.forEach(([id,title,w,h])=>FLAT.push({id,
 const ov=$("#ov"),ovS=$("#ovS");let ovMode=null,ovI=0,ovLast=null;
 function ovShow(){ovLast=document.activeElement;ov.classList.add("open");document.body.style.overflow="hidden";$("#ovX").focus()}
 function ovClose(){ovS.innerHTML="";ov.classList.remove("open");document.body.style.overflow=$("#space").classList.contains("open")?"hidden":"";ovMode=null;ovLast&&ovLast.focus()}
-function openFilm(i){ovMode="film";ovI=(i+FVIEW.length)%FVIEW.length;const f=FVIEW[ovI];ovS.innerHTML="";
+function openFilm(i){if(FVIEW[(i+FVIEW.length)%FVIEW.length])track("film-"+FVIEW[(i+FVIEW.length)%FVIEW.length].id,"Watched "+FVIEW[(i+FVIEW.length)%FVIEW.length].title);ovMode="film";ovI=(i+FVIEW.length)%FVIEW.length;const f=FVIEW[ovI];ovS.innerHTML="";
   const v=document.createElement("video");v.src=`media/clips/${f.id}.mp4`;v.poster=`media/poster/${f.id}.jpg`;v.controls=true;v.playsInline=true;ovS.appendChild(v);
   v.play().catch(()=>{v.muted=true;v.play().catch(()=>{})});$("#ovT").textContent=f.title;$("#ovU").textContent=f.sub;if(!ov.classList.contains("open"))ovShow()}
 function openStill(i){ovMode="still";ovI=(i+FLAT.length)%FLAT.length;const s=FLAT[ovI];ovS.innerHTML=`<img src="media/stills/${s.id}.webp" alt="${s.title}">`;
@@ -977,6 +977,9 @@ addEventListener("keydown",e=>{if(!ovMode)return;if(e.key==="Escape")ovClose();i
   document.addEventListener("pointerleave",()=>cur.style.opacity=0);document.addEventListener("pointerenter",()=>cur.style.opacity=1);
 })();
 
+// silent visitor events (GoatCounter); does nothing until the counter script has loaded
+const track=(path,title)=>{try{window.goatcounter&&goatcounter.count&&goatcounter.count({path,title:title||path,event:true})}catch(e){}};
+
 /* =========================================================
    8. LATENT SPACE: the work, floating in deep space
    ========================================================= */
@@ -984,7 +987,7 @@ function openTrack(i){ovMode="track";ovI=(i+SHOTS.length)%SHOTS.length;const t=S
   ovS.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;width:100%;max-height:100%">${["track","final"].map(k=>
     `<figure style="margin:0;display:flex;flex-direction:column;gap:6px;min-height:0"><video src="media/track/${t.id}-${k}.mp4" muted loop playsinline autoplay style="width:100%;max-height:70vh;object-fit:contain;background:#000"></video><figcaption style="font-size:12px;color:var(--dim)">${k==="track"?"Track":"Final"}</figcaption></figure>`).join("")}</div>`;
   $("#ovT").textContent=t.title;$("#ovU").textContent=`${t.film}. ${t.work}`;if(!ov.classList.contains("open"))ovShow()}
-function openReel(i){i=i||0;const R=REELS[i];ovMode="reel";ovS.innerHTML="";const v=document.createElement("video");v.src=R.src;v.poster=R.poster;v.controls=true;v.playsInline=true;ovS.appendChild(v);
+function openReel(i){i=i||0;const R=REELS[i];track("play-"+R.src.split("/").pop().replace(".mp4",""),"Played "+R.title);ovMode="reel";ovS.innerHTML="";const v=document.createElement("video");v.src=R.src;v.poster=R.poster;v.controls=true;v.playsInline=true;ovS.appendChild(v);
   v.play().catch(()=>{v.muted=true;v.play().catch(()=>{})});$("#ovT").textContent=R.title;$("#ovU").textContent=R.sub;if(!ov.classList.contains("open"))ovShow()}
 function openFilmId(id){let i=FVIEW.findIndex(f=>f.id===id);if(i<0){const all=$$("#fchips .chip").find(b=>b.textContent.trim().startsWith("All"));all&&all.click();i=FVIEW.findIndex(f=>f.id===id)}openFilm(Math.max(0,i))}
 
@@ -1038,7 +1041,7 @@ function openFilmId(id){let i=FVIEW.findIndex(f=>f.id===id);if(i<0){const all=$$
       objs.push({kind:"card",z:big?cz:cz+80,x:big?0:Math.cos(ang+.4)*r*1.5,y:big?-10:Math.sin(ang+.4)*r*.8+30,ph:sr()*7,rot:0,w:big?440:230,ar:big?120/440:86/230,t:a,u:b,
         c:textCard(big?440:230,big?120:86,(x,w,h)=>{panel(x,w,h,big?"#5BE08A":"#9d8cff");x.fillStyle="#9ea3bd";x.font="600 11px Archivo";x.fillText(a.toUpperCase(),20,28);
           x.fillStyle="#fff";x.font=`700 ${big?25:19}px Archivo`;x.fillText(b,20,big?72:60);if(big){x.fillStyle="#9ea3bd";x.font="500 12px Archivo";x.fillText("Click to write",20,98)}}),
-        act:()=>{if(url.startsWith("mailto"))location.href=url;else window.open(url,"_blank","noopener")}})});
+        act:()=>{track("click-"+a.toLowerCase(),"Clicked "+a+" (Latent space)");if(url.startsWith("mailto"))location.href=url;else window.open(url,"_blank","noopener")}})});
     END=cz+2600;MAXZ=cz-950;
     // destination galaxy straight ahead, plus galaxies and nebulae along the route
     const neb=(n,o)=>gals.push(Object.assign({src:`media/space/${n[0]}.jpg`,ar:n[2]/n[1]},o));
@@ -1134,7 +1137,7 @@ function openFilmId(id){let i=FVIEW.findIndex(f=>f.id===id);if(i<0){const all=$$
 
   // ---------- open / close ----------
   if(!FINE)hint.firstChild.textContent="Swipe up to go deeper";
-  async function go(){if(open)return;open=true;size();if(!built){try{await document.fonts.ready}catch(e){}build()}
+  async function go(){if(open)return;open=true;track("latent-space","Opened Latent space");size();if(!built){try{await document.fonts.ready}catch(e){}build()}
     document.body.style.overflow="hidden";space.classList.add("open");requestAnimationFrame(()=>space.classList.add("vis"));
     camZ=RM?0:-2600;tgtZ=0;last=0;cancelAnimationFrame(raf);raf=requestAnimationFrame(frame);$("#spX").focus({preventScroll:true});
     history.replaceState(null,"","#latent-space")}
@@ -1187,5 +1190,6 @@ function openFilmId(id){let i=FVIEW.findIndex(f=>f.id===id);if(i<0){const all=$$
 /* copy email */
 $("#copyMail").onclick=async()=>{const t=$("#toast");try{await navigator.clipboard.writeText("akashdesai091@gmail.com");t.textContent="Email copied"}catch(e){t.textContent="akashdesai091@gmail.com"}t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1800)};
 </script>
+<script data-goatcounter="https://akashdesai.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>
